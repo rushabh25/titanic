@@ -35,7 +35,7 @@ def plotPClassDistribution(train):
 
     # defining subplots
     f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
-
+    f.tight_layout()
     #plot distinct Pclass values - Total
     objects = [i.pclass for i in distinct_Pclass]
     y_pos = np.arange(len(objects))
@@ -45,7 +45,7 @@ def plotPClassDistribution(train):
     total_plot.set_xticklabels(objects)
     #total_plot.set_xlabel(objects)
     total_plot.set_ylabel('Count')
-    total_plot.set_title('PClass Count Distribution')
+    total_plot.set_title('PClass Count Dist')
 
     #plot distinct Pclass values - Survived
     values1 = [i.counts for i in distinct_Pclass_survived]
@@ -53,7 +53,7 @@ def plotPClassDistribution(train):
     survival_plot.set_xticks(y_pos)
     survival_plot.set_xticklabels(objects)
     survival_plot.set_ylabel('Survived = 1')
-    survival_plot.set_title('PClass Survival Distribution')
+    survival_plot.set_title('PClass Survival Dist')
 
     #plot distinct Pclass values - Mean
     values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
@@ -62,9 +62,50 @@ def plotPClassDistribution(train):
     mean_plot.set_xticks(y_pos)
     mean_plot.set_xticklabels(objects)
     mean_plot.set_ylabel('Survived = 1 / Count')
-    mean_plot.set_title('PClass Mean Distribution')
+    mean_plot.set_title('PClass Mean Dist')
 
-    plt.show()   
+    plt.show()
+    plt.close(f)
+
+
+#function to plot distribution of Embarked variable
+def plotEmbarkedDistribution(train):
+    distinct_Pclass = sorted(train.select("embarked", "survived").groupBy(["embarked"]).count().withColumnRenamed("count", "counts").collect())
+    distinct_Pclass_survived = sorted(train.select("embarked", "survived").filter("survived='1'").groupBy(["embarked"]).count().withColumnRenamed("count", "counts").collect())
+
+    # defining subplots
+    f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
+    f.tight_layout()
+    #plot distinct Pclass values - Total
+    objects = [i.embarked for i in distinct_Pclass]
+    y_pos = np.arange(len(objects))
+    values = [i.counts for i in distinct_Pclass]
+    total_plot.bar(y_pos, values, align='center', alpha=0.5)
+    total_plot.set_xticks(y_pos)
+    total_plot.set_xticklabels(objects)
+    #total_plot.set_xlabel(objects)
+    total_plot.set_ylabel('Count')
+    total_plot.set_title('Embarked Count Dist')
+
+    #plot distinct Pclass values - Survived
+    values1 = [i.counts for i in distinct_Pclass_survived]
+    survival_plot.bar(y_pos, values1, align='center', alpha=0.5)
+    survival_plot.set_xticks(y_pos)
+    survival_plot.set_xticklabels(objects)
+    survival_plot.set_ylabel('Survived = 1')
+    survival_plot.set_title('Embarked Survival Dist')
+
+    #plot distinct Pclass values - Mean
+    values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
+    values_mean = [ '%.2f' % elem for elem in values_new ]
+    mean_plot.bar(y_pos, values_mean, align='center', alpha=0.5)
+    mean_plot.set_xticks(y_pos)
+    mean_plot.set_xticklabels(objects)
+    mean_plot.set_ylabel('Survived = 1 / Count')
+    mean_plot.set_title('Embarked Mean Dist')
+
+    plt.show()
+    plt.close(f)
 
 # load training and testing datasets
 train_data = sc.textFile('D:\\temp\\rshah\\datasets\\titanic\\train.csv')
@@ -73,11 +114,22 @@ test_data = sc.textFile('D:\\temp\\rshah\\datasets\\titanic\\test.csv')
 #remove header row
 header_train = train_data.first()
 
-train = train_data.filter(lambda row:row!=header_train).map(mapParseLine).toDF()
+train = train_data.filter(lambda row:row!=header_train).map(mapParseLine).toDF().cache()
 
 #lets check the correlation of Each column Values with rate of survival
 # 1. first lets start with Pclass
 plotPClassDistribution(train)
+#from the graphs we saw that there is a decent correlation between PClass and Survival rate
+#ppl from Pclass = 1 had better chances of survival ~ 65%, hence we should be using PClass as one of the features
+
+
+# 2. Lets check Embarked distribution with rate of survival
+# >>> train.select("embarked").groupBy("embarked").count().collect()
+# [Row(embarked=u'Q', count=77), Row(embarked=u'C', count=168), Row(embarked=u'S', count=644), Row(embarked=u'', count=2)]
+# Since there are couple of records with NULL embarked, lets replace those with 'S' (most frequent one)
+embarked = train.replace('', 'S', 'embarked')
+plotEmbarkedDistribution(embarked)
+
 
 ###get the required cols
 ##cols_train = train.map(lambda x:x.split(',')).map(lambda x: Row(PassengerId = x[0], Survived=x[1], Gender=x[5], Age=x[6]))
