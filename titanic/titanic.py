@@ -47,17 +47,24 @@ def mapParseLineTest(line):
     Embarked = columns[11]
     return Row(passengerId = PassengerId, pclass=Pclass, sex=Sex, age=Age, sibsp=SibSp, parch=Parch, fare=Fare, embarked=Embarked)
 
+#function to plot distribution of generic variable
 
-#function to plot distribution of PClass variable
-def plotPClassDistribution(train):
-    distinct_Pclass = sorted(train.select("pclass", "survived").groupBy(["pclass"]).count().withColumnRenamed("count", "counts").collect())
-    distinct_Pclass_survived = sorted(train.select("pclass", "survived").filter("survived='1'").groupBy(["pclass"]).count().withColumnRenamed("count", "counts").collect())
+def plotGenericDistribution(train, variable):
+    distinct_Pclass = sorted(train.select(variable, "survived").groupBy([variable]).count().withColumnRenamed("count", "counts").collect())
+    distinct_Pclass_survived = sorted(train.select(variable, "survived").filter("survived='1'").groupBy([variable]).count().withColumnRenamed("count", "counts").collect())
 
     # defining subplots
     f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
     f.tight_layout()
     #plot distinct Pclass values - Total
-    objects = [i.pclass for i in distinct_Pclass]
+    if(variable == 'pclass'):
+        objects = [i.pclass for i in distinct_Pclass]
+    if(variable == 'embarked'):
+        objects = [i.embarked for i in distinct_Pclass]
+    if(variable == 'sex'):
+        objects = [i.sex for i in distinct_Pclass]
+    if(variable == 'ageBucketed'):
+        objects = [i.ageBucketed for i in distinct_Pclass]
     y_pos = np.arange(len(objects))
     values = [i.counts for i in distinct_Pclass]
     total_plot.bar(y_pos, values, align='center', alpha=0.5)
@@ -65,7 +72,7 @@ def plotPClassDistribution(train):
     total_plot.set_xticklabels(objects)
     #total_plot.set_xlabel(objects)
     total_plot.set_ylabel('Count')
-    total_plot.set_title('PClass Count Dist')
+    total_plot.set_title(variable + ' Count Dist')
 
     #plot distinct Pclass values - Survived
     values1 = [i.counts for i in distinct_Pclass_survived]
@@ -73,7 +80,7 @@ def plotPClassDistribution(train):
     survival_plot.set_xticks(y_pos)
     survival_plot.set_xticklabels(objects)
     survival_plot.set_ylabel('Survived = 1')
-    survival_plot.set_title('PClass Survival Dist')
+    survival_plot.set_title(variable + ' Survival Dist')
 
     #plot distinct Pclass values - Mean
     values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
@@ -82,129 +89,9 @@ def plotPClassDistribution(train):
     mean_plot.set_xticks(y_pos)
     mean_plot.set_xticklabels(objects)
     mean_plot.set_ylabel('Survived = 1 / Count')
-    mean_plot.set_title('PClass Mean Dist')
+    mean_plot.set_title(variable + ' Mean Dist')
 
-    plt.show(block=False)
-    
-
-
-#function to plot distribution of Embarked variable
-def plotEmbarkedDistribution(train):
-    distinct_Pclass = sorted(train.select("embarked", "survived").groupBy(["embarked"]).count().withColumnRenamed("count", "counts").collect())
-    distinct_Pclass_survived = sorted(train.select("embarked", "survived").filter("survived='1'").groupBy(["embarked"]).count().withColumnRenamed("count", "counts").collect())
-
-    # defining subplots
-    f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
-    f.tight_layout()
-    #plot distinct Pclass values - Total
-    objects = [i.embarked for i in distinct_Pclass]
-    y_pos = np.arange(len(objects))
-    values = [i.counts for i in distinct_Pclass]
-    total_plot.bar(y_pos, values, align='center', alpha=0.5)
-    total_plot.set_xticks(y_pos)
-    total_plot.set_xticklabels(objects)
-    #total_plot.set_xlabel(objects)
-    total_plot.set_ylabel('Count')
-    total_plot.set_title('Embarked Count Dist')
-
-    #plot distinct Pclass values - Survived
-    values1 = [i.counts for i in distinct_Pclass_survived]
-    survival_plot.bar(y_pos, values1, align='center', alpha=0.5)
-    survival_plot.set_xticks(y_pos)
-    survival_plot.set_xticklabels(objects)
-    survival_plot.set_ylabel('Survived = 1')
-    survival_plot.set_title('Embarked Survival Dist')
-
-    #plot distinct Pclass values - Mean
-    values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
-    values_mean = [ '%.2f' % elem for elem in values_new ]
-    mean_plot.bar(y_pos, values_mean, align='center', alpha=0.5)
-    mean_plot.set_xticks(y_pos)
-    mean_plot.set_xticklabels(objects)
-    mean_plot.set_ylabel('Survived = 1 / Count')
-    mean_plot.set_title('Embarked Mean Dist')
-
-    plt.show(block=False)
-    
-
-
-#function to plot distribution of Gender variable
-def plotGenderDistribution(train):
-    distinct_Pclass = sorted(train.select("sex", "survived").groupBy(["sex"]).count().withColumnRenamed("count", "counts").collect())
-    distinct_Pclass_survived = sorted(train.select("sex", "survived").filter("survived='1'").groupBy(["sex"]).count().withColumnRenamed("count", "counts").collect())
-
-    # defining subplots
-    f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
-    f.tight_layout()
-    #plot distinct Pclass values - Total
-    objects = [i.sex for i in distinct_Pclass]
-    y_pos = np.arange(len(objects))
-    values = [i.counts for i in distinct_Pclass]
-    total_plot.bar(y_pos, values, align='center', alpha=0.5)
-    total_plot.set_xticks(y_pos)
-    total_plot.set_xticklabels(objects)
-    #total_plot.set_xlabel(objects)
-    total_plot.set_ylabel('Count')
-    total_plot.set_title('Gender Count Dist')
-
-    #plot distinct Pclass values - Survived
-    values1 = [i.counts for i in distinct_Pclass_survived]
-    survival_plot.bar(y_pos, values1, align='center', alpha=0.5)
-    survival_plot.set_xticks(y_pos)
-    survival_plot.set_xticklabels(objects)
-    survival_plot.set_ylabel('Survived = 1')
-    survival_plot.set_title('Gender Survival Dist')
-
-    #plot distinct Pclass values - Mean
-    values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
-    values_mean = [ '%.2f' % elem for elem in values_new ]
-    mean_plot.bar(y_pos, values_mean, align='center', alpha=0.5)
-    mean_plot.set_xticks(y_pos)
-    mean_plot.set_xticklabels(objects)
-    mean_plot.set_ylabel('Survived = 1 / Count')
-    mean_plot.set_title('Gender Mean Dist')
-
-    plt.show(block=False)
-    
-
-
-#function to plot distribution of Age variable against the rate of survival
-def plotAgeDistribution(train):
-    distinct_Pclass = sorted(train.select("AgeBucketed", "survived").groupBy(["AgeBucketed"]).count().withColumnRenamed("count", "counts").collect())
-    distinct_Pclass_survived = sorted(train.select("AgeBucketed", "survived").filter("survived='1'").groupBy(["AgeBucketed"]).count().withColumnRenamed("count", "counts").collect())
-
-    # defining subplots
-    f, (total_plot, survival_plot, mean_plot) = plt.subplots(1,3)
-    f.tight_layout()
-    #plot distinct Pclass values - Total
-    objects = [i.AgeBucketed for i in distinct_Pclass]
-    y_pos = np.arange(len(objects))
-    values = [i.counts for i in distinct_Pclass]
-    total_plot.bar(y_pos, values, align='center', alpha=0.5)
-    total_plot.set_xticks(y_pos)
-    total_plot.set_xticklabels(objects)
-    #total_plot.set_xlabel(objects)
-    total_plot.set_ylabel('Count')
-    total_plot.set_title('AgeBucketed Count Dist')
-
-    #plot distinct Pclass values - Survived
-    values1 = [i.counts for i in distinct_Pclass_survived]
-    survival_plot.bar(y_pos, values1, align='center', alpha=0.5)
-    survival_plot.set_xticks(y_pos)
-    survival_plot.set_xticklabels(objects)
-    survival_plot.set_ylabel('Survived = 1')
-    survival_plot.set_title('AgeBucketed Survival Dist')
-
-    #plot distinct Pclass values - Mean
-    values_new = [1.0*int(b) / int(m) for b,m in zip(values1, values)]
-    values_mean = [ '%.2f' % elem for elem in values_new ]
-    mean_plot.bar(y_pos, values_mean, align='center', alpha=0.5)
-    mean_plot.set_xticks(y_pos)
-    mean_plot.set_xticklabels(objects)
-    mean_plot.set_ylabel('Survived = 1 / Count')
-    mean_plot.set_title('AgeBucketed Mean Dist')
-
-    plt.show(block=False)
+    plt.show()
     
 
 # load training and testing datasets
@@ -218,7 +105,7 @@ train = train_data.filter(lambda row:row!=header_train).map(mapParseLine).toDF()
 
 #lets check the correlation of Each column Values with rate of survival
 # 1. first lets start with Pclass
-plotPClassDistribution(train)
+plotGenericDistribution(train, 'pclass')
 #from the graphs we saw that there is a decent correlation between PClass and Survival rate
 #ppl from Pclass = 1 had better chances of survival ~ 65%, hence we should be using PClass as one of the features
 
@@ -228,11 +115,11 @@ plotPClassDistribution(train)
 # [Row(embarked=u'Q', count=77), Row(embarked=u'C', count=168), Row(embarked=u'S', count=644), Row(embarked=u'', count=2)]
 # Since there are couple of records with NULL embarked, lets replace those with 'S' (most frequent one)
 train = train.replace('', 'S', 'embarked')
-plotEmbarkedDistribution(train)
+plotGenericDistribution(train, 'embarked')
 # we see that embarked = 'C' had better chance of survival
 
 # 3. Lets check Gender distribution with Survival
-plotGenderDistribution(train)
+plotGenericDistribution(train, 'sex')
 # Quite famously around, 75% of the female survived
 
 # 4. Lets bucket age values and then plot its survival distribution
@@ -246,7 +133,7 @@ age_split = [0.0, 12.0, 18.0, 30.0, 45.0, 60.0, 150.0]
 ageBucketizer = Bucketizer(splits=age_split, inputCol="age", outputCol="ageBucketed")
 bucketed = ageBucketizer.transform(train_df)
 
-plotAgeDistribution(bucketed)
+plotGenericDistribution(bucketed, 'ageBucketed')
 # again quite famously kids < 18 years of age had the highest survival rate
 
 # to begin lets try to train the model using these 4 variables
@@ -259,7 +146,7 @@ genderIndexer = StringIndexer(inputCol="sex", outputCol="genderIndexed")
 ageBucketizer = Bucketizer(splits=age_split, inputCol="age", outputCol="ageBucketed")
 embarkedIndexer = StringIndexer(inputCol="embarked", outputCol="embarkedIndexed")
 pclassIndexer = StringIndexer(inputCol="pclass", outputCol="pclassIndexed")
-featureAssembler = VectorAssembler(inputCols=["genderIndexed", "ageBucketed", "pclassIndexed"], outputCol="features")
+featureAssembler = VectorAssembler(inputCols=["genderIndexed", "ageBucketed", "embarkedIndexed"], outputCol="features")
 labelIndexer = StringIndexer(inputCol="survived", outputCol="label")
 
 dt = RandomForestClassifier(labelCol="label", featuresCol="features")
@@ -269,8 +156,8 @@ pipeline = Pipeline(stages=[genderIndexer, ageBucketizer, embarkedIndexer, pclas
 
 
 paramGrid = ParamGridBuilder() \
-    .addGrid(dt.maxDepth, [2, 3, 4, 5, 6]) \
-    .addGrid(dt.numTrees, [3, 5, 7, 9, 11, 13]) \
+    .addGrid(dt.maxDepth, [3, 5, 7]) \
+    .addGrid(dt.numTrees, [5, 10, 15]) \
     .build()
 
 crossval = CrossValidator(estimator=pipeline,
@@ -298,49 +185,5 @@ pred = pred.select(pred.passengerId, pred.Survived.cast("int"))
 #write output to csv file
 pred.write.csv("D:\\temp\\rshah\\spark-2.0.1-bin-hadoop2.7\\rshah_scripts\\titanic\\first_trial.csv")
 
-
-###get the required cols
-##cols_train = train.map(lambda x:x.split(',')).map(lambda x: Row(PassengerId = x[0], Survived=x[1], Gender=x[5], Age=x[6]))
-##cols_test = test.map(lambda x:x.split(',')).map(lambda x: Row(PassengerId= x[0], Gender=x[4], Age=x[5]))
-##
-###create dataframe to load into ML
-##train_df = sql.createDataFrame(cols_train)
-##test_df = sql.createDataFrame(cols_test)
-##
-###cast Age column to double
-##train_df = train_df.withColumn('Age2', train_df.Age.cast("double"))
-##train_df = train_df.drop('Age').withColumnRenamed('Age2', 'Age')
-##
-##test_df = test_df.withColumn('Age2', test_df.Age.cast("double"))
-##test_df = test_df.drop('Age').withColumnRenamed('Age2', 'Age')
-##
-###fill null age values with average values
-##mean_value_train =train_df.groupBy().avg('Age').collect()[0][0]
-##mean_value_test =test_df.groupBy().avg('Age').collect()[0][0]
-##
-##train_df = train_df.fillna(mean_value_train, subset=["Age"])
-##test_df = test_df.fillna(mean_value_test, subset=["Age"])
-##
-##age_split = [0.0, 12.0, 18.0, 30.0, 45.0, 60.0, 150.0]
-##
-###index gender, create a vector from gender column and index the label
-##genderIndexer = StringIndexer(inputCol="Gender", outputCol="GenderIndexed")
-##ageBucketizer = Bucketizer(splits=age_split, inputCol="Age", outputCol="AgeBucketed")
-##featureAssembler = VectorAssembler(inputCols=["GenderIndexed", "AgeBucketed"], outputCol="features")
-##labelIndexer = StringIndexer(inputCol="Survived", outputCol="label")
-##
-##dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
-##
-###chain everything into a pipeline
-##pipeline = Pipeline(stages=[genderIndexer, ageBucketizer, labelIndexer, featureAssembler, dt])
-##
-###modeling begins
-##model = pipeline.fit(train_df)
-##
-### predictions
-##pred = model.transform(test_df)
-##pred = pred.withColumnRenamed('prediction', 'Survived')
-##pred = pred.select(pred.PassengerId, pred.Survived.cast("int"))
-##
-###write output to csv file
-##pred.write.csv("D:\\temp\\rshah\\datasets\\titanic\\first_trial.csv")
+# next plan is to do PCA on fare and pclass: assuming higher fare meaning better pclass.
+# still need to perform the correlation between both the values
